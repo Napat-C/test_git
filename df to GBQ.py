@@ -35,8 +35,8 @@ def write_to_gbq(df,Table_ID,Project_ID,table_schema):
     pandas_gbq.to_gbq(df, destination_table = Table_ID, project_id = Project_ID, 
                           if_exists='append', table_schema=table_schema)
     
-Table_ID = 'commondata-341406.air4thaiaqidata.aqi_data_thailand'
-Project_ID = 'commondata-341406' 
+Table_ID = 'your table id'
+Project_ID = 'your project id' 
 table_schema = [{'name':'stationID', 'type':'STRING'},
                 {'name':'date', 'type':'DATE'},
                 {'name':'time', 'type':'STRING'},
@@ -49,3 +49,6 @@ table_schema = [{'name':'stationID', 'type':'STRING'},
                 {'name':'AQI_Level','type':'INTEGER'},
                 {'name':'Lat','type':'STRING'},
                 {'name':'Long','type':'STRING'}]
+
+df = Thai_AQI()
+write_to_gbq(df,Table_ID,Project_ID,table_schema)
