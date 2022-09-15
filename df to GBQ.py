@@ -23,7 +23,7 @@ project_id = "sonorous-seat-362304"
 credential_file = r"C:\Users\NapatCota\Downloads\sonorous-seat-362304-8df46a7a8c0b.json"
 credential = Credentials.from_service_account_file(credential_file)
 # Location for BQ job, it needs to match with destination table location
-job_location = "australia-southeast1"
+job_location = "asia-southeast1"
 
 # Save Pandas dataframe to BQ
 df.to_gbq(target_table, project_id=project_id, if_exists='replace',
