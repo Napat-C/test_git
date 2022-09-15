@@ -1,54 +1,30 @@
-from google.cloud import bigquery
-import os
-import pandas_gbq
 import pandas as pd
-import requests
-import gcsfs
+from datetime import datetime
+from google.oauth2.service_account import Credentials
 
-def Thai_AQI():
-    
-    url = "http://air4thai.pcd.go.th/services/getNewAQI_JSON.php"
-    r = requests.get(url)
-    
-    if  r.status_code == 200:
-        
-        df = pd.read_json(url, orient='records')
-        dp = pd.json_normalize(df['stations'])
-        cols = dp.columns
-        cols=cols.str.replace('LastUpdate.', '')
-        cols=cols.str.replace('.value', '')
-        cols=cols.str.replace('.aqi', '')
-        cols=cols.str.replace('AQI.Level', 'AQI_Level')
-        dp.columns=cols
-        dp.reset_index(inplace=False)
-        d_out = dp[['stationID','date','time','PM25','PM10','CO','NO2','SO2','AQI', 'AQI_Level','lat','long']]
-             
-    else: 
-        print("API Error")
-       
-    return d_out
+def str_to_date(str):
+    return datetime.strptime(str, '%Y-%m-%d').date()
 
-def write_to_gbq(df,Table_ID,Project_ID,table_schema):
-     ## Get BiqQuery Set up
-    client = bigquery.Client()
-    table = client.get_table(Table_ID)
-    pandas_gbq.to_gbq(df, destination_table = Table_ID, project_id = Project_ID, 
-                          if_exists='append', table_schema=table_schema)
-    
-Table_ID = 'your table id'
-Project_ID = 'your project id' 
-table_schema = [{'name':'stationID', 'type':'STRING'},
-                {'name':'date', 'type':'DATE'},
-                {'name':'time', 'type':'STRING'},
-                {'name':'PM25', 'type':'STRING'},
-                {'name':'PM10', 'type':'STRING'}, 
-                {'name':'CO', 'type':'STRING'},
-                {'name':'NO2', 'type':'STRING'},
-                {'name':'SO2', 'type':'STRING'},
-                {'name':'AQI', 'type':'INTEGER'},
-                {'name':'AQI_Level','type':'INTEGER'},
-                {'name':'Lat','type':'STRING'},
-                {'name':'Long','type':'STRING'}]
 
-df = Thai_AQI()
-write_to_gbq(df,Table_ID,Project_ID,table_schema)
+data = [{'DATE': str_to_date('2020-01-01'), 'TYPE': 'TypeA', 'SALES': 1000},
+        {'DATE': str_to_date('2020-01-01'), 'TYPE': 'TypeB', 'SALES': 200},
+        {'DATE': str_to_date('2020-01-01'), 'TYPE': 'TypeC', 'SALES': 300},
+        {'DATE': str_to_date('2020-02-01'), 'TYPE': 'TypeA', 'SALES': 700},
+        {'DATE': str_to_date('2020-02-01'), 'TYPE': 'TypeB', 'SALES': 400},
+        {'DATE': str_to_date('2020-02-01'), 'TYPE': 'TypeC', 'SALES': 500},
+        {'DATE': str_to_date('2020-03-01'), 'TYPE': 'TypeA', 'SALES': 300},
+        {'DATE': str_to_date('2020-03-01'), 'TYPE': 'TypeB', 'SALES': 900},
+        {'DATE': str_to_date('2020-03-01'), 'TYPE': 'TypeC', 'SALES': 100}]
+df = pd.DataFrame(data)
+
+# Define target table in BQ
+target_table = "YOUR_DATA_SET.pandas"
+project_id = "sonorous-seat-362304"
+credential_file = r"C:\Users\NapatCota\Downloads\sonorous-seat-362304-8df46a7a8c0b.json"
+credential = Credentials.from_service_account_file(credential_file)
+# Location for BQ job, it needs to match with destination table location
+job_location = "australia-southeast1"
+
+# Save Pandas dataframe to BQ
+df.to_gbq(target_table, project_id=project_id, if_exists='replace',
+          location=job_location, progress_bar=True, credentials=credential)
